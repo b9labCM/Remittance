@@ -25,15 +25,16 @@ contract Remittance is Stoppable {
      // Function to load ether on contract. Once it is loaded the amount can 
      //  be withdraw only to whom who knows the complete password 
     
-    function depositOnContract(bytes32 puzzle) onlyIfRunning public payable returns(bool success){
+    function depositOnContract(address exchanger, bytes32 puzzle) public payable onlyIfRunning  returns(bool success){
         require(msg.value > 0, "Insufficient funds");
         require(msg.sender != address(0), " address must not be 0x0");
         require(deposits[puzzle].amount == 0, "Puzzle already used!");
       
-        emit LogDeposit(msg.sender, this, msg.value, puzzle);
-        deposits[puzzle] = deposit(msg.value, now, this);
+        emit LogDeposit(msg.sender, exchanger, msg.value, puzzle);
+        deposits[puzzle] = deposit(msg.value, now, exchanger);
         return true; 
     }
+
 
         
     function withdraw(string password1, string password2) public onlyIfRunning returns(bool success){
