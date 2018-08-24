@@ -2,10 +2,10 @@ const Remittance = artifacts.require("./Remittance.sol");
 
 contract('Remittance', function(accounts){
     let contract ; 
-    let owner = accounts[0]; 
-    let account_A = accounts[1]; 
-    let account_B = accounts[2];
-    let account_C = accounts[3];
+    const owner = accounts[0]; 
+    const account_A = accounts[1]; 
+    const account_B = accounts[2];
+    const account_C = accounts[3];
   
     let pass1 = 'b';
     let pass2 = 'b';
@@ -15,12 +15,12 @@ contract('Remittance', function(accounts){
     
     /* Deploy a new contract for each test */
     beforeEach(async function(){
-        contract = await Remittance.new(); 
+        remi = await Remittance.new({from: owner}); 
     });
 
     /*Test 1: Contract should be owned by the deployer*/
     it("Testing ownership", function() {
-        return contract.owner({from: owner})
+        return remi.owner({from: owner})
         .then(_owner => {
             let tmpOwner = _owner;
             assert.equal(tmpOwner, owner, "The deployer is not the owner!");
@@ -29,7 +29,7 @@ contract('Remittance', function(accounts){
 
     /*Test 2: Deposit creation*/
     it("Testing deposit creation", function() {
-        return contract.depositOnContract(account_C, passHashed, {from: account_A, value: web3.toWei(0.001, "ether")})
+        return remi.depositOnContract(account_C, passHashed, {from: account_A, value: web3.toWei(0.001, "ether")})
         .then(txObj => {
              assert.equal(txObj.receipt.status, 1, "Deposit fails ");
              assert.equal(txObj.logs.length,1, "event has not been emitted");
@@ -38,19 +38,41 @@ contract('Remittance', function(accounts){
 
     });
 
+    /*Test 2: Deposit storage is correct*/
+    it("Testing storage", function() {
+        return remi.depositOnContract(account_C, passHashed, {from: account_A, value: web3.toWei(0.001, "ether")})
+        .then(txObj => {
+             assert.equal(txObj.receipt.status, 1, "Deposit fails ");
+             assert.equal(txObj.logs.length,1, "event has not been emitted");
+             assert.equal(txObj.logs[0].args.exchanger, account_C, "exchanger not set correctly")
+	     assert.equal(txObj.logs[0].args.amount.toString(10), web3.toWei(0.001, "ether").toString(10), "exchanger not set correctly")
+	     return remi.deposits(passHashed)
+	}).then(dep => {
+	     assert.equal(dep[0],web3.toWei(0.001, "ether"), "amount deposit");
+	     assert.equal(dep[2],account_C, "exchanger saved correctly");
+	}) 
+
+    });
+
+
+    
+
     /*Test 3: Withdraw*/
     it("Testing withdraw", function() {
-        return contract.depositOnContract(account_C, passHashed, {from: account_A, value: web3.toWei(0.1, "ether")})
+        return remi.depositOnContract(account_C, passHashed, {from: account_A, value: web3.toWei(0.1, "ether")})
         .then(txObj => {
              assert.equal(txObj.receipt.status, 1, "Deposit fails ");
              assert.equal(txObj.logs.length,1, "deposit event has not been emitted");
              assert.equal(txObj.logs[0].args.exchanger, account_C, "exchanger set correctly")
-             return contract.withdraw(pass1, pass2, {from: account_C})
+             return remi.withdraw(pass1, pass2, {from: account_C})
         }).then(txObj => {
             assert.equal(txObj.receipt.status, 1, "Deposit fails ");
             assert.equal(txObj.logs.length,1, "withdraw event has not been emitted");
 	    // in progress......
+	    assert.equal(txObj.logs[0].args.amount,web3.toWei(0.1, "ether"), "deposited and withdrawn amount is not the same");
+		
         })
 
     });
+
 })
