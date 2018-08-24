@@ -6,7 +6,7 @@ import "./Stoppable.sol";
 contract Remittance is Stoppable {
     
     
-    struct deposit {
+    struct Deposit {
         uint amount; // Amount to send 
         uint timeLimit; // Time limit within the amount can be withdraw (not used for now)
         address exchanger; 
@@ -14,7 +14,7 @@ contract Remittance is Stoppable {
     }
     
     
-    mapping(bytes32 => deposit) public deposits; 
+    mapping(bytes32 => Deposit) public deposits; 
     
     event LogDeposit(address sender, address exchanger, uint amount, bytes32 psw);
     event LogWithdraw(address exchanger, address receiver, uint amount);
@@ -31,7 +31,11 @@ contract Remittance is Stoppable {
         require(deposits[puzzle].amount == 0, "Puzzle already used!");
       
         emit LogDeposit(msg.sender, exchanger, msg.value, puzzle);
-        deposits[puzzle] = deposit(msg.value, now, exchanger);
+        deposits[puzzle] = Deposit({
+    				amount: msg.value,
+    				timeLimit: now,
+    				exchanger: exchanger
+				});
         return true; 
     }
 
