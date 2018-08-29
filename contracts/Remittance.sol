@@ -61,7 +61,7 @@ contract Remittance is Stoppable {
 	deposits[tmp_password].amount = 0;
 
         // You can take back money only if the session is expired
-        require( now >= deposits[tmp_password].timeLimit, "Session expired");
+        require( now > deposits[tmp_password].timeLimit, "Session expired");
         
         emit LogWithdraw(msg.sender,tmpAmount, tmp_password);
         msg.sender.transfer(tmpAmount);
